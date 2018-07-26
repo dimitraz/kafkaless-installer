@@ -1,1 +1,4 @@
-namespace: kubeless
+kubeless_namespace: kubeless
+kafka_namespace: strimzi
+
+kafka_cluster_name: kafka-cluster
