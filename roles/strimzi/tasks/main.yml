@@ -2,34 +2,43 @@
 # This playbook contains plays to deploy a strimzi (kafka) cluster
 # in an isolated namespace
 
-- name: Login as system admin
-  command: oc login -u system:admin
+- block:
+    - name: Login as system admin
+      command: oc login -u system:admin
 
-- name: Create a '{{ kafka_namespace }}' namespace
-  command: oc create ns {{ kafka_namespace }}
+    - name: Create a '{{ kafka_namespace }}' namespace
+      command: oc new-project {{ kafka_namespace }}
 
-- name: Switch to {{ kafka_namespace }} namespace
-  command: oc project {{ kafka_namespace }}
+    - name: Write correct namespace to Strimzi templates
+      replace: 
+        path: '{{ item }}'
+        regexp: 'namespace: .*'
+        replace: 'namespace: {{ kafka_namespace }}'
+      with_fileglob:
+      - "cluster-operator/*ClusterRoleBinding*.yaml"
 
-- name: Write correct namespace to Strimzi templates
-  replace: 
-    path: '{{ item }}'
-    regexp: 'namespace: .*'
-    replace: 'namespace: {{ kafka_namespace }}'
-  with_fileglob:
-  - "cluster-operator/*ClusterRoleBinding*.yaml"
+    - name: Install Strimzi Custom Resource Definitions
+      command: oc create -f {{ item }} -n {{ kafka_namespace }}
+      with_fileglob:
+      - "cluster-operator/*.yaml"
+      register: result
+      failed_when: result.stderr != "" and "already exists" not in result.stderr
 
-- name: Install Strimzi Custom Resource Definitions
-  command: oc create -f {{ item }} -n {{ kafka_namespace }}
-  with_fileglob:
-  - "cluster-operator/*.yaml"
-  ignore_errors: True
+    - name: Process the app template
+      command: oc create -f {{ item }}
+      with_fileglob:
+      - "*template*.yaml"
+      register: result
+      failed_when: result.stderr != "" and "already exists" not in result.stderr
 
-- name: Process the app template
-  shell: oc create -f {{ item }}
-  with_fileglob:
-  - "*template*.yaml"
-  ignore_errors: True
+    - name: Create the app
+      command: oc new-app strimzi-ephemeral --param=CLUSTER_NAME={{ kafka_cluster_name }}
 
-- name: Create the app
-  shell: oc new-app strimzi-ephemeral --param=CLUSTER_NAME={{ kafka_cluster_name }}
+  # Rescue allows recovery from failed tasks, so cleaning 
+  # up can be done here
+  rescue:
+    - debug:
+        msg: "Strimzi playbook failed. Cleaning up..."
+
+    - name: Deleting {{ kafka_namespace }} namespace
+      command: oc delete project {{ kafka_namespace }}

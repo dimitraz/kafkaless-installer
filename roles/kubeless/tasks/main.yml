@@ -2,27 +2,30 @@
 # This playbook contains plays to deploy a kubeless cluster
 # in an isolated namespace
 
-- name: Login as system admin
-  command: oc login -u system:admin
+- block:
+    - name: Create a '{{ kubeless_namespace }}' namespace
+      command: oc new-project {{ kubeless_namespace }}
 
-- name: Create a '{{ kubeless_namespace }}' namespace
-  command: oc create ns {{ kubeless_namespace }}
+    - name: Create the kubeless deployment
+      command: oc create -f https://github.com/kubeless/kubeless/releases/download/v1.0.0-alpha.7/kubeless-openshift-v1.0.0-alpha.7.yaml -n {{ kubeless_namespace }}
+      register: result
+      failed_when: result.stderr != "" and "already exists" not in result.stderr
 
-- name: Switch to {{ kubeless_namespace }} namespace
-  command: oc project {{ kubeless_namespace }}
+    # Create trigger controller deployment
+    - template:
+        src: trigger-controller.yml.j2
+        dest: /tmp/trigger-controller.yaml
+      
+    - name: Create trigger controller deployment
+      command: oc create -f /tmp/trigger-controller.yaml -n {{ kubeless_namespace }}
+      register: result
+      failed_when: result.stderr != "" and "already exists" not in result.stderr
 
-- name: Create the kubeless deployment
-  command: oc create -f https://github.com/kubeless/kubeless/releases/download/v1.0.0-alpha.7/kubeless-openshift-v1.0.0-alpha.7.yaml -n {{ kubeless_namespace }}
+    - file: path=/tmp/trigger-controller.yaml state=absent
 
-# Create trigger controller deployment
-- set_fact: 
-    kafka_brokers: "kafka:9092"
+  rescue:
+    - debug:
+        msg: "Kubeless playbook failed. Cleaning up..."
 
-- template:
-    src: trigger-controller.yml.j2
-    dest: /tmp/trigger-controller.yaml
-  
-- name: Create trigger controller deployment
-  command: oc create -f /tmp/trigger-controller.yaml -n {{ kubeless_namespace }}
-
-- file: path=/tmp/trigger-controller.yaml state=absent
+    - name: Deleting {{ kubeless_namespace }} namespace
+      command: oc delete project {{ kubeless_namespace }}
