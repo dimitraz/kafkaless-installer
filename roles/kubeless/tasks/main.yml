@@ -5,11 +5,14 @@
 - name: Login as system admin
   command: oc login -u system:admin
 
-- name: Create a '{{ namespace }}' namespace
-  command: oc create ns {{ namespace }}
+- name: Create a '{{ kubeless_namespace }}' namespace
+  command: oc create ns {{ kubeless_namespace }}
+
+- name: Switch to {{ kubeless_namespace }} namespace
+  command: oc project {{ kubeless_namespace }}
 
 - name: Create the kubeless deployment
-  command: oc create -f https://github.com/kubeless/kubeless/releases/download/v1.0.0-alpha.7/kubeless-openshift-v1.0.0-alpha.7.yaml -n {{ namespace }}
+  command: oc create -f https://github.com/kubeless/kubeless/releases/download/v1.0.0-alpha.7/kubeless-openshift-v1.0.0-alpha.7.yaml -n {{ kubeless_namespace }}
 
 # Create trigger controller deployment
 - set_fact: 
@@ -20,6 +23,6 @@
     dest: /tmp/trigger-controller.yaml
   
 - name: Create trigger controller deployment
-  command: oc create -f /tmp/trigger-controller.yaml -n {{ namespace }}
+  command: oc create -f /tmp/trigger-controller.yaml -n {{ kubeless_namespace }}
 
 - file: path=/tmp/trigger-controller.yaml state=absent
