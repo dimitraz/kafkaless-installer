@@ -4,7 +4,7 @@ metadata:
   labels:
     kubeless: kafka-trigger-controller
   name: kafka-trigger-controller
-  namespace: kubeless
+  namespace: {{ kubeless_namespace }}
 spec:
   selector:
     matchLabels:
@@ -48,7 +48,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: controller-acct
-  namespace: kubeless
+  namespace: {{ kubeless_namespace }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
