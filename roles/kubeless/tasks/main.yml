@@ -3,30 +3,9 @@
 # in an isolated namespace
 
 - block:
-    - name: Create a '{{ kubeless_namespace }}' namespace
-      command: oc new-project {{ kubeless_namespace }}
+    - include_tasks: openshift.yml
+  when: platform == "openshift"
 
-    - name: Create the kubeless deployment
-      command: oc create -f https://github.com/kubeless/kubeless/releases/download/v1.0.1/kubeless-openshift-v1.0.1.yaml -n {{ kubeless_namespace }}
-      register: result
-      failed_when: result.stderr != "" and "already exists" not in result.stderr
-
-    # Create trigger controller deployment
-    # This configuration is needed for custom Kafka instances
-    - template:
-        src: trigger-controller.yml.j2
-        dest: /tmp/trigger-controller.yaml
-
-    - name: Create trigger controller deployment
-      command: oc create -f /tmp/trigger-controller.yaml -n {{ kubeless_namespace }}
-      register: result
-      failed_when: result.stderr != "" and "already exists" not in result.stderr
-
-    - file: path=/tmp/trigger-controller.yaml state=absent
-
-  rescue:
-    - debug:
-        msg: "Kubeless playbook failed. Cleaning up..."
-
-    - name: Deleting {{ kubeless_namespace }} namespace
-      command: oc delete project {{ kubeless_namespace }}
+- block:
+    - include_tasks: kubernetes.yml
+  when: platform == "kubernetes"

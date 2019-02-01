@@ -1,0 +1,33 @@
+- set_fact:
+    template_url: "https://raw.githubusercontent.com/strimzi/strimzi-kafka-operator/0.9.0/examples/templates/cluster-operator/persistent-template.yaml"
+    template_name: "strimzi-persistent"
+
+- block:
+    - name: Login as system admin
+      command: oc login -u system:admin
+
+    - name: Create a '{{ kafka_namespace }}' namespace
+      command: oc new-project {{ kafka_namespace }}
+
+    - name: Download strimzi installation files
+      shell: "curl -s -L {{ install_url }} \\ 
+      | sed 's/namespace: .*/namespace: {{ kafka_namespace }}/' \\
+      | oc -n {{ kafka_namespace }} apply -f -"
+      register: result
+      failed_when: result.stderr != "" and "already exists" not in result.stderr
+
+    - name: Download the cluster template
+      shell: "curl -s -L {{ template_url }} | oc create -f -"
+      register: result
+      failed_when: result.stderr != "" and "already exists" not in result.stderr
+
+    - name: Create the persistent app
+      command: oc new-app {{ template_name }} --param=CLUSTER_NAME={{ kafka_cluster_name }} -n {{ kafka_namespace }}
+
+  # Clean up if the tasks fail
+  rescue:
+    - debug:
+        msg: "Strimzi playbook failed. Cleaning up..."
+
+    - name: Deleting {{ kafka_namespace }} namespace
+      command: oc delete project {{ kafka_namespace }}

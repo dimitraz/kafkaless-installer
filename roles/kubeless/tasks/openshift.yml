@@ -1,14 +1,15 @@
 - set_fact:
-    install_url: "https://github.com/kubeless/kubeless/releases/download/v1.0.1/kubeless-v1.0.1.yaml"
+    install_url: "https://github.com/kubeless/kubeless/releases/download/v1.0.1/kubeless-openshift-v1.0.1.yaml"
 
 - block:
     - name: Create a '{{ kubeless_namespace }}' namespace
-      command: "kubectl create ns {{ kubeless_namespace }}"
+      command: "oc new-project {{ kubeless_namespace }}"
 
     - name: Create the kubeless deployment
-      command: kubectl create -f {{ install_url }} -n {{ kubeless_namespace }}
+      command: oc create -f {{ install_url }} -n {{ kubeless_namespace }}
       register: result
       failed_when: result.stderr != "" and "already exists" not in result.stderr
+      when: platform == "openshift"
 
     # Create trigger controller deployment
     # This configuration is needed for custom Kafka instances
@@ -17,7 +18,7 @@
         dest: /tmp/trigger-controller.yaml
 
     - name: Create trigger controller deployment
-      command: "kubectl create -f /tmp/trigger-controller.yaml -n {{ kubeless_namespace }}"
+      command: "oc create -f /tmp/trigger-controller.yaml -n {{ kubeless_namespace }}"
       register: result
       failed_when: result.stderr != "" and "already exists" not in result.stderr
 
@@ -29,4 +30,4 @@
         msg: "Kubeless playbook failed. Cleaning up..."
 
     - name: Deleting {{ kubeless_namespace }} namespace
-      command: "kubectl delete ns {{ kubeless_namespace }}"
+      command: "oc delete project {{ kubeless_namespace }}"
