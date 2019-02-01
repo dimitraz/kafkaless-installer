@@ -10,31 +10,31 @@
       command: oc new-project {{ kafka_namespace }}
 
     - name: Write correct namespace to Strimzi templates
-      replace: 
-        path: '{{ item }}'
-        regexp: 'namespace: .*'
-        replace: 'namespace: {{ kafka_namespace }}'
+      replace:
+        path: "{{ item }}"
+        regexp: "namespace: .*"
+        replace: "namespace: {{ kafka_namespace }}"
       with_fileglob:
-      - "cluster-operator/*ClusterRoleBinding*.yaml"
+        - "cluster-operator/*RoleBinding*.yaml"
 
     - name: Install Strimzi Custom Resource Definitions
       command: oc create -f {{ item }} -n {{ kafka_namespace }}
       with_fileglob:
-      - "cluster-operator/*.yaml"
+        - "cluster-operator/*.yaml"
       register: result
       failed_when: result.stderr != "" and "already exists" not in result.stderr
 
     - name: Process the app template
       command: oc create -f {{ item }}
       with_fileglob:
-      - "*template*.yaml"
+        - "*template*.yaml"
       register: result
       failed_when: result.stderr != "" and "already exists" not in result.stderr
 
     - name: Create the app
       command: oc new-app strimzi-ephemeral --param=CLUSTER_NAME={{ kafka_cluster_name }}
 
-  # Rescue allows recovery from failed tasks, so cleaning 
+  # Rescue allows recovery from failed tasks, so cleaning
   # up can be done here
   rescue:
     - debug:

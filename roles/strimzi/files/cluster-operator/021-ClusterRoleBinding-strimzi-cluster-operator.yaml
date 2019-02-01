@@ -5,10 +5,10 @@ metadata:
   labels:
     app: strimzi
 subjects:
-  - kind: ServiceAccount
-    name: strimzi-cluster-operator
-    namespace: strimzi
+- kind: ServiceAccount
+  name: strimzi-cluster-operator
+  namespace: strimzi
 roleRef:
   kind: ClusterRole
-  name: strimzi-cluster-operator
+  name: strimzi-cluster-operator-global
   apiGroup: rbac.authorization.k8s.io

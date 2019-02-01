@@ -1,25 +1,17 @@
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
 metadata:
-  name: strimzi-topic-operator
+  name: strimzi-cluster-operator-global
   labels:
     app: strimzi
 rules:
 - apiGroups:
-  - ""
+  - rbac.authorization.k8s.io
   resources:
-  - configmaps
+  - clusterrolebindings
   verbs:
   - get
-  - list
-  - watch
   - create
+  - delete
   - patch
   - update
-  - delete
-- apiGroups:
-  - ""
-  resources:
-  - events
-  verbs:
-  - create
