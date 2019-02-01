@@ -1,9 +1,18 @@
 ---
 # This playbook deploys the whole application stack in this site.
 
-- name: Start a kafka-kubeless oc cluster
-  hosts: localhost
+- hosts: localhost
   remote_user: root
+
+  vars_prompt:
+    - name: "platform"
+      prompt: "Running openshift or kubernetes?"
+      default: "kubernetes"
+      private: no
+
+  tasks:
+    - fail: msg="Unrecognised platform. Please choose between 'kubernetes' or 'openshift'"
+      when: platform not in ["kubernetes", "openshift"]
 
   roles:
     - strimzi

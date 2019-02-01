@@ -1,0 +1,28 @@
+- block:
+    - name: Create a '{{ kubeless_namespace }}' namespace
+      command: "kubectl create ns {{ kubeless_namespace }}"
+
+    - name: Create the kubeless deployment
+      command: kubectl create -f https://github.com/kubeless/kubeless/releases/download/v1.0.1/kubeless-v1.0.1.yaml -n {{ kubeless_namespace }}
+      register: result
+      failed_when: result.stderr != "" and "already exists" not in result.stderr
+
+    # Create trigger controller deployment
+    # This configuration is needed for custom Kafka instances
+    - template:
+        src: trigger-controller.yml.j2
+        dest: /tmp/trigger-controller.yaml
+
+    - name: Create trigger controller deployment
+      command: "kubectl create -f /tmp/trigger-controller.yaml -n {{ kubeless_namespace }}"
+      register: result
+      failed_when: result.stderr != "" and "already exists" not in result.stderr
+
+    - file: path=/tmp/trigger-controller.yaml state=absent
+
+  rescue:
+    - debug:
+        msg: "Kubeless playbook failed. Cleaning up..."
+
+    - name: Deleting {{ kubeless_namespace }} namespace
+      command: "kubectl delete ns {{ kubeless_namespace }}"
