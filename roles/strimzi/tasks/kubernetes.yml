@@ -1,5 +1,5 @@
 - set_fact:
-    template_url: "https://raw.githubusercontent.com/strimzi/strimzi-kafka-operator/0.9.0/examples/kafka/kafka-persistent.yaml"
+    template_url: "https://raw.githubusercontent.com/strimzi/strimzi-kafka-operator/0.11.1/examples/kafka/kafka-persistent.yaml"
 
 - block:
     - name: Create a '{{ kafka_namespace }}' namespace

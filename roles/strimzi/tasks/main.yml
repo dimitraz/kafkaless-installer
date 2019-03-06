@@ -3,12 +3,12 @@
 # in an isolated namespace
 
 - set_fact:
-    install_url: "https://github.com/strimzi/strimzi-kafka-operator/releases/download/0.9.0/strimzi-cluster-operator-0.9.0.yaml"
+    install_url: "https://github.com/strimzi/strimzi-kafka-operator/releases/download/0.11.1/strimzi-cluster-operator-0.11.1.yaml"
 
 - block:
     - include_tasks: openshift.yml
-  when: platform == "openshift"
+  when: platform == "oc"
 
 - block:
     - include_tasks: kubernetes.yml
-  when: platform == "kubernetes"
+  when: platform == "k8s"
