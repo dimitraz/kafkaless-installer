@@ -1,5 +1,5 @@
 - set_fact:
-    install_url: "https://github.com/kubeless/kubeless/releases/download/v1.0.1/kubeless-v1.0.1.yaml"
+    install_url: "https://github.com/kubeless/kubeless/releases/download/v1.0.2/kubeless-v1.0.2.yaml"
 
 - block:
     - name: Create a '{{ kubeless_namespace }}' namespace

@@ -9,7 +9,7 @@
       command: oc create -f {{ install_url }} -n {{ kubeless_namespace }}
       register: result
       failed_when: result.stderr != "" and "already exists" not in result.stderr
-      when: platform == "openshift"
+      when: platform == "oc"
 
     # Create trigger controller deployment
     # This configuration is needed for custom Kafka instances

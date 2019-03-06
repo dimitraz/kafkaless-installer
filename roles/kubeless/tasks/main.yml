@@ -4,8 +4,8 @@
 
 - block:
     - include_tasks: openshift.yml
-  when: platform == "openshift"
+  when: platform == "oc"
 
 - block:
     - include_tasks: kubernetes.yml
-  when: platform == "kubernetes"
+  when: platform == "k8s"
