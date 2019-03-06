@@ -6,13 +6,13 @@
 
   vars_prompt:
     - name: "platform"
-      prompt: "Running openshift or kubernetes?"
-      default: "kubernetes"
+      prompt: "Running oc or k8s?"
+      default: "k8s"
       private: no
 
   tasks:
-    - fail: msg="Unrecognised platform. Please choose between 'kubernetes' or 'openshift'"
-      when: platform not in ["kubernetes", "openshift"]
+    - fail: msg="Unrecognised platform. Please choose between 'k8s' or 'oc'"
+      when: platform not in ["k8s", "oc"]
 
   roles:
     - strimzi
