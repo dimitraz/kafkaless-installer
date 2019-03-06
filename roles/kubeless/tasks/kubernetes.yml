@@ -1,12 +1,9 @@
-- set_fact:
-    install_url: "https://github.com/kubeless/kubeless/releases/download/v1.0.2/kubeless-v1.0.2.yaml"
-
 - block:
     - name: Create a '{{ kubeless_namespace }}' namespace
       command: "kubectl create ns {{ kubeless_namespace }}"
 
     - name: Create the kubeless deployment
-      command: kubectl create -f {{ install_url }} -n {{ kubeless_namespace }}
+      command: kubectl create -f {{ k8s_install_url }} -n {{ kubeless_namespace }}
       register: result
       failed_when: result.stderr != "" and "already exists" not in result.stderr
 
